@@ -26,7 +26,7 @@ const resolvers = {
         },
     },
 
-    Mutation: {
+     Mutation: {
         addUser: async (parent, {username, email, password }) => {
             const user = await User.create({ username, email, password});
             const token = signToken(user);
@@ -49,7 +49,7 @@ const resolvers = {
 
             return { token, user };
         },
-        addBook: async (parent, { description }, context) => {
+        saveBook: async (parent, { description }, context) => {
             if (context.user) {
                 const book = await Book.create({
                     description,
@@ -81,7 +81,7 @@ const resolvers = {
             }
             throw new AuthenticationError('You need to be logged in!');
           },
-    },
+     },
 };
 
 module.exports = resolvers;

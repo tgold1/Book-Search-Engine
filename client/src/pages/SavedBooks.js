@@ -6,8 +6,10 @@ import {
   Row,
   Col
 } from 'react-bootstrap';
-
-import { getMe, deleteBook } from '../utils/API';
+import { useQuery } from '@apollo/client'
+import { QUERY_ME } from '../utils/queries';
+import { useMutation } from '@apollo/client';
+import { REMOVE_BOOK } from '../utils/mutations';
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
 
@@ -17,31 +19,27 @@ const SavedBooks = () => {
   // use this to determine if `useEffect()` hook needs to run again
   const userDataLength = Object.keys(userData).length;
 
-  useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const token = Auth.loggedIn() ? Auth.getToken() : null;
+  const { loading, data: meData } = useQuery(QUERY_ME, {
+    // pass URL parameter
+    variables: { bookId: book },
+  });
+  const [removeBook, { error, data:removeData }] = useMutation(REMOVE_BOOK);
+  const book = meData?.book || {};
 
-        if (!token) {
-          return false;
-        }
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-        const response = await getMe(token);
+    //     const user = await response.json();
+    //     setUserData(user);
+    //   } catch (err) {
+    //     console.error(err);
+    //   }
+    // };
 
-        if (!response.ok) {
-          throw new Error('something went wrong!');
-        }
-
-        const user = await response.json();
-        setUserData(user);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    getUserData();
-  }, [userDataLength]);
-
+    userData();
+  // }, [userDataLength]);
+ 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
     const token = Auth.loggedIn() ? Auth.getToken() : null;
@@ -50,20 +48,32 @@ const SavedBooks = () => {
       return false;
     }
 
-    try {
-      const response = await deleteBook(bookId, token);
+    
+       
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
+       try {
+        // Execute mutation and pass in defined parameter data as variables
+        const { data } = await removeBook({
+          variables: {bookId },
+        });
+  
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
       }
+      // (bookId, token);
 
-      const updatedUser = await response.json();
-      setUserData(updatedUser);
+      // if (!response.ok) {
+      //   throw new Error('something went wrong!');
+      // }
+
+      // const updatedUser = await response.json();
+      // setUserData(updatedUser);
       // upon success, remove book's id from localStorage
       removeBookId(bookId);
-    } catch (err) {
-      console.error(err);
-    }
+    // } catch (err) {
+    //   console.error(err);
+    // }
   };
 
   // if data isn't here yet, say so
